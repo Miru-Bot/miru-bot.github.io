@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Miru Lyrics Finder</title>
+  <style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&family=Quicksand:wght@300..700&display=swap');
+    * { box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: 'Noto+Color+Emoji','Quicksand', sans-serif;
+      display: flex;
+      flex-direction: column;
+      background: #ffffff;
+      color: #000000;
+      overflow-x: hidden;
+    }
+
+    .container {
+      flex: 1;
+      max-width: 600px;
+      width: 100%;
+      margin: auto;
+      padding: 2rem 1rem 4rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+
+    h1 {
+      margin-top: 2rem;
+      font-size: 1.8rem;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.6rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      margin-top: 1.5rem;
+    }
+
+    button {
+      margin-top: 1rem;
+      padding: 0.6rem 1.2rem;
+      font-size: 1rem;
+      cursor: pointer;
+      width: 100%;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    #spinner {
+      display: none;
+      margin: 1.5rem auto;
+      border: 4px solid #ccc;
+      border-top: 4px solid #333;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .result {
+      margin-top: 2rem;
+      text-align: left;
+    }
+
+    img {
+      width: 100%;
+      max-width: 100%;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+    }
+
+    pre {
+      white-space: pre-wrap;
+      line-height: 1.5;
+      font-size: 0.95rem;
+    }
+
+    .share-btn {
+      margin-top: 1rem;
+      background: #28a745;
+    }
+
+    .share-btn:hover {
+      background: #1e7e34;
+    }
+
+    footer {
+      background: #f2f2f2;
+      color: #000;
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.9rem;
+      border-top: 1px solid #ccc;
+    }
+
+    .footer-inner {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Miru Lyrics Finder</h1>
+
+    <input id="query" placeholder="Enter song title here." />
+    <button onclick="searchLyrics()">Search</button>
+
+    <div id="spinner"></div>
+    <div id="result" class="result"></div>
+  </div>
+
+  <footer>
+    <div class="footer-inner">
+      © 2025 Miru Lyrics Finder
+    </div>
+  </footer>
+
+  <script>
+    const queryInput = document.getElementById("query");
+    const resultDiv = document.getElementById("result");
+    const spinner = document.getElementById("spinner");
+
+    queryInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") searchLyrics();
+    });
+
+    async function searchLyrics() {
+      const query = queryInput.value.trim();
+      resultDiv.innerHTML = "";
+      if (!query) return alert("Enter song title first!");
+      spinner.style.display = "block";
+
+      try {
+        const res = await fetch(`https://lyrics-api.miru.my.id/search?q=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        spinner.style.display = "none";
+
+        if (!data || !data.text) {
+          resultDiv.innerHTML = "<p>Lyrics not found.</p>";
+          return;
+        }
+
+        resultDiv.innerHTML = `
+          <img src="${data.artworkUrl}" alt="${data.title} artwork">
+          <h2>${data.title}</h2>
+          <h4>${data.artist}</h4>
+          <pre>${data.text}</pre>
+          <button class="share-btn" onclick="shareLyrics('${data.title}', '${data.artist}', '${data.provider}')">Share</button>
+          <br><small>Provider: ${data.provider}</small>
+        `;
+      } catch (err) {
+        spinner.style.display = "none";
+        resultDiv.innerHTML = "<p style='color: red;'>Something happen.</p>";
+      }
+    }
+
+    function shareLyrics(title, artist, provider) {
+      const text = `🎵 ${title} by ${artist} (via ${provider})\nhttps://lyrics.miru.my.id/${encodeURIComponent(title)}`;
+      navigator.clipboard.writeText(text).then(() => {
+        alert("✅ Copy to your keyboard.");
+      }).catch(() => {
+        alert("❌ Something wrong.");
+      });
+    }
+  </script>
+</body>
+  </html>
